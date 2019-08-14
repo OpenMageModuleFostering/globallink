@@ -1,0 +1,159 @@
+
+<?php
+try {
+  $attr_set_selected = $this->getRequest()->getParam('selected_attributeset_value');
+  $entityTypeId = Mage::getModel('eav/entity')
+          ->setType('catalog_product')
+          ->getTypeId();
+
+  $attributeSetCollection = Mage::getModel('eav/entity_attribute_set')
+          ->getCollection()
+          ->setEntityTypeFilter($entityTypeId);
+  $attribute_set_arr = array();
+
+  foreach ($attributeSetCollection as $_attributeSet) {
+    $arr = $_attributeSet->getData();
+    $set_id = $arr['attribute_set_id'];
+    $attribute_set_arr[$arr['attribute_set_id']] = $arr['attribute_set_name'];
+  }
+
+  if ($attr_set_selected != '') {
+    $db_arr = Mage::helper("globallink")->get_attribute_set_config($attr_set_selected);
+    $attributes = Mage::getModel('catalog/product_attribute_api')->items($attr_set_selected);
+    $attr_arr = array();
+    foreach ($attributes as $attr) {
+      $attribute = Mage::getModel('eav/entity_attribute')->load($attr['attribute_id']);
+      if ($attribute->getIsVisible() && !$attribute->getIsGlobal()) {
+        if ($attribute->getFrontendInput() == 'text' || $attribute->getFrontendInput() == 'textarea') {
+          $attr_arr[$attr['attribute_id']] = array('attribute_set_id' => $set_id, 'attribute_id' => $attr['attribute_id'],
+              'attribute_code' => $attribute->getAttributeCode(), 'attribute_type' => $attribute->getFrontendInput(), 'attribute_name' => $attribute->getFrontendLabel());
+        }
+      }
+    }
+
+    Mage::helper("globallink")->gl_debug("[" . __FILE__ . "][" . __LINE__ . "][" . __METHOD__ . "][Attribute Array]", $attr_arr);
+  }
+  ?>
+  <div class="content-header">
+    <table cellspacing="0" class="grid-header">
+      <tr>
+        <td><h3>GlobalLink - Configure Product Attributes For Translation</h3></td>
+        <?php
+        if ($attr_set_selected != '') {
+          ?>
+          <td class="a-right">
+            <button onclick="postForm.submit()" class="scalable save" type="button"><span>Update Attribute Set</span></button>
+          </td>
+          <?php
+        }
+        ?>
+      </tr>
+    </table>
+  </div>
+  <form id="load_form" name="load_form" method="post" action="<?php echo $this->getUrl('*/*/load') ?>">
+    <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+    <div id="staging_store_container">
+      <p class="switcher"><label for="selected_object_type"><b><?php echo $this->__('Attribute Set:') ?></b>&nbsp;&nbsp;</label>
+        <select id="attribute-set-dropdown" name="attribute-set-dropdown" onchange="loadForm.submit()">
+          <option value="">&nbsp; --Select-- &nbsp;</option>
+          <?php
+          foreach ($attribute_set_arr as $attr_set_id => $attr_set_name) {
+            if ($attr_set_id == $attr_set_selected) {
+              ?>
+              <option value="<?php echo $attr_set_id ?>" selected="true"><?php echo $attr_set_name ?></option>
+              <?php
+            }
+            else {
+              ?>
+              <option value="<?php echo $attr_set_id ?>"><?php echo $attr_set_name ?></option>
+              <?php
+            }
+          }
+          ?>
+        </select>
+      </p>
+    </div>
+  </form>
+
+  <div class="entry-edit">
+    <?php
+    if ($attr_set_selected != '') {
+      ?>
+      <form id="post_form" name="post_form" method="post" action="<?php echo $this->getUrl('*/*/post') ?>">
+        <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+        <input type="hidden" name="attribute_set_id" value="<?php echo $attr_set_selected ?>"/>
+        <div class="grid">
+          <table cellspacing="0" class="data">
+            <thead>
+              <tr class="headings">
+                <th class="no-link" style="width:10%"><input type='checkbox' id='selectAllCheckBox' onclick="javascript:selectAll(this);" >&nbsp;&nbsp;&nbsp;&nbsp;Translate?&nbsp;</th>
+                <th class="no-link" style="width:25%">Attribute Code</th>
+                <th class="no-link" style="width:50%">Attribute Label</th>
+                <th class="no-link" style="width:25%">Attribute Set</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              foreach ($attr_arr as $_attr_id => $_attribute) {
+                $checked = "";
+                if ($db_arr[$attr_set_selected][$_attr_id] == 1) {
+                  $checked = "checked=\"true\"";
+                }
+                $attribute_code = $_attribute['attribute_code'];
+                $attribute_name = $_attribute['attribute_name'];
+                ?>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="attribute_ids[]" value="<?php echo $_attr_id ?>" <?php echo $checked ?>/>
+                  </td>
+                  <td>
+                    <?php echo $attribute_code ?>
+                  </td>
+                  <td>
+                    <?php echo $attribute_name ?>
+                  </td>
+                  <td>
+                    <?php echo $attribute_set_arr[$attr_set_selected] ?>
+                  </td>
+                </tr>
+                <?php
+              }
+              ?>
+            </tbody>
+          </table>
+        </div>
+      </form>
+      <?php
+    }
+    ?>
+  </div>
+  <script language='Javascript'>
+    function selectAll(obj) {
+      var checked = false;
+      if(obj.checked == true) {
+        checked = true;
+      }
+      $arr = document.getElementsByName("attribute_ids[]");
+      for (i=0;i<$arr.length;i++) {
+        $arr[i].checked = checked;
+      }
+    }F
+  </script>
+  <script type="text/javascript">
+    var loadForm = new varienForm('load_form');
+    var postForm = new varienForm('post_form');
+  </script>
+  <?php
+}
+catch (Exception $ex) {
+  Mage::helper("globallink")->gl_debug($ex->getFile() . ' - Line ' . $ex->getLine() . ': Globallink PHTML Generic Error = ', $ex->getMessage());
+  $error_msg = 'Globallink WebService Error - ' . $ex->getMessage();
+}
+if (isset($error_msg) && $error_msg != '') {
+  ?>
+  <div class="entry-edit">
+    <span style="color:red;text-align: center"><?php echo $error_msg ?></span>
+  </div>
+  <?php
+}
+?>

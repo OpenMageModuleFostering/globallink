@@ -1,0 +1,109 @@
+<?php
+try {
+  $selected_object_type = str_replace("-", "/", $this->getRequest()->getParam('selected_object_type', ''));
+  $_objectTypes = Mage::helper("globallink")->getObjectTypeOptions(array('catalog/product'));
+  Mage::helper("globallink")->gl_debug("glfieldconfig phtml", $selected_object_type);
+  ?>
+  <div class="content-header">
+    <table cellspacing="0">
+      <tr>
+        <td style="width:50%;"><h3>GlobalLink - Configure Fields For Translation</h3></td>
+        <td class="a-right">
+          <?php if ($selected_object_type != ''): ?>
+            <button onclick="updateAction()" class="scalable save" type="button"><span> Update Configuration </span></button>
+          <?php endif; ?>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <?php if (count($_objectTypes) > 0): ?>
+    <div id="staging_store_container">
+      <p class="switcher"><label for="selected_object_type"><b><?php echo $this->__('Choose Type:') ?></b>&nbsp;&nbsp;</label>
+        <select name="selected_object_type" id="selected_object_type" class="left-col-block" onchange="return switchObjectType(this);">
+          <option value=""> -- Select -- </option>
+          <?php foreach ($_objectTypes as $code => $_objectType): ?>
+            <option value="<?php echo $code ?>" <?php if ($selected_object_type == $code): ?> selected="selected"<?php endif; ?>><?php echo $this->escapeHtml($_objectType) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </p>
+    </div>
+  <?php endif; ?>
+  <?php if ($selected_object_type != ''): ?>
+    <form id="update_form" name="update_form" method="post" action="">
+      <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+      <input type="hidden" name="selected_object_type" value="<?php echo $selected_object_type ?>"/>
+      <div>
+        <?php echo $this->getGridHtml() ?>
+      </div>
+    </form>
+    <form id="insert_form" name="insert_form" method="post" action="<?php echo $this->getUrl('*/*/insert') ?>">
+      <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+      <input type="hidden" name="selected_object_type" value="<?php echo $selected_object_type ?>"/>
+      <br/>
+      <div class="entry-edit">
+        <div class="entry-edit-head">
+          <h4 class="icon-head head-edit-form fieldset-legend">Add New Field</h4>
+        </div>
+        <fieldset id="group_fields">
+          <table class="form-list" >
+            <tr>
+              <td class="label">
+                <label for="field_code">Code <span class="required">*</span> </label>
+              </td>
+              <td class="value">
+                <input type="text" name="field_code" id="field_code" size="120" class="input-text required-entry" />
+              </td>
+            </tr>
+            <tr>
+              <td class="label">
+                <label for="field_name">Name <span class="required">*</span> </label>
+              </td>
+              <td class="value">
+                <input type="text" name="field_name" id="field_name" size="120" class="input-text required-entry" />
+              </td>
+            </tr>
+            <tr>
+              <td class="label">
+                <label for="include_in_translation">Translate </label>
+              </td>
+              <td class="value">
+                <input type="checkbox" name="include_in_translation" id="include_in_translation" checked="true" value="1"/>
+              </td>
+            </tr>
+          </table>
+          <br/>
+          <div><button onclick="insertForm.submit()" class="scalable add" type="button"><span> Add New Field </span></button></div>
+        </fieldset>
+      </div>
+    </form>
+  <?php endif; ?>
+  <script type="text/javascript">
+    function switchObjectType(obj) {
+      var val = obj.value.replace("/","-");
+      var storeParam = obj.value ? 'selected_object_type/' + val + '/' : '';
+      setLocation('<?php echo $this->getUrl('*/*') ?>' + storeParam);
+      return true;
+    }
+    function updateAction() {
+      document.update_form.action ="<?php echo $this->getUrl('*/*/update') ?>";
+      updateForm.submit();
+    }
+  </script>
+  <script type="text/javascript">
+    var updateForm = new varienForm('update_form');
+    var insertForm = new varienForm('insert_form');
+  </script>
+  <?php
+}
+catch (Exception $ex) {
+  Mage::helper("globallink")->gl_debug($ex->getFile() . ' - Line ' . $ex->getLine() . ': Globallink PHTML Generic Error = ', $ex->getMessage());
+  $error_msg = 'Globallink WebService Error - ' . $ex->getMessage();
+}
+if (isset($error_msg) && $error_msg != '') {
+  ?>
+  <div class="entry-edit">
+    <span style="color:red;text-align: center"><?php echo $error_msg ?></span>
+  </div>
+  <?php
+}
+?>

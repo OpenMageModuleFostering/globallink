@@ -1,0 +1,238 @@
+<?php
+try {
+  Mage::app()->setCurrentStore(Mage_Core_Model_App::ADMIN_STORE_ID);
+  $admin_store = Mage::app()->getStore();
+  $gl_locales = Mage::helper("globallink")->get_all_gl_locales(TRUE);
+  $mapped_locales = Mage::helper("globallink")->get_mapped_locales();
+
+  $default_store = "";
+  $stores = Mage::app()->getStores();
+  $store_arr = array();
+  $unmapped_store_arr = array();
+  $mapped_store_arr = array();
+  foreach ($stores as $store) {
+    if ($store->getIsActive()) {
+      $store_arr[$store->getStoreId()] = $store->getName();
+      $unmapped_store_arr[$store->getStoreId()] = $store->getName();
+    }
+  }
+
+  if (!isset($store_arr[Mage_Core_Model_App::ADMIN_STORE_ID])) {
+    $store_arr[Mage_Core_Model_App::ADMIN_STORE_ID] = $admin_store->getName();
+  }
+
+  if (!isset($unmapped_store_arr[Mage_Core_Model_App::ADMIN_STORE_ID])) {
+    $unmapped_store_arr[Mage_Core_Model_App::ADMIN_STORE_ID] = $admin_store->getName();
+  }
+  ?>
+
+  <div class="content-header">
+    <table cellspacing="0" class="grid-header">
+      <tr>
+        <td><h3>GlobalLink - Locale Mapping</h3></td>
+        <td class="a-right">
+          <button onclick="if(checkSelectedRows()){deleteForm.submit()}" class="scalable delete" type="button"><span>Delete Locale Mapping</span></button>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <form id="delete_form" name="delete_form" method="post" action="<?php echo $this->getUrl('*/*/edit') ?>">
+    <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+    <div class="entry-edit">
+      <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend">Locale Mapping</h4>
+      </div>
+      <div class="grid">
+        <table cellspacing="0" class="data">
+          <thead>
+            <tr class="headings">
+              <th class="no-link" style="width:5%">
+                <?php
+                if (isset($mapped_locales) && count($mapped_locales) > 0) {
+                  ?>
+                  <input type='checkbox' id='selectAllCheckBox' onclick="javascript:selectAll(this);" >
+                  <?php
+                }
+                ?>
+              </th>
+              <th class="no-link" style="width:45%">GlobalLink Locale</th>
+              <th class="no-link" style="width:45%">Store</th>
+              <th class="no-link" style="width:5%">Default Source locale</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php
+            if (isset($mapped_locales) && count($mapped_locales) > 0) {
+              foreach ($mapped_locales as $locale) {
+                $locale_code = $locale['gl_locale_code'];
+                $locale_desc = $locale['gl_locale_desc'];
+                $store_id = $locale['store_id'];
+                $default = $locale['default'] == 1 ? "Yes" : "";
+                if ($locale['default'] == 1) {
+                  $default_store = $store_id;
+                }
+                $store_name = '';
+                if (isset($store_arr[$store_id])) {
+                  $store_name = $store_arr[$store_id];
+                  $mapped_store_arr[$store_id] = $unmapped_store_arr[$store_id];
+                  unset($unmapped_store_arr[$store_id]);
+                }
+                ?>
+                <tr>
+                  <td><input type="checkbox" name="mapped_locale_code[]" value="<?php echo $locale_code ?>"/></td>
+                  <td><?php echo $locale_desc ?></td>
+                  <td><?php echo $store_name ?></td>
+                  <td><?php echo $default ?></td>
+                </tr>
+                <?php
+              }
+            }
+            else {
+              ?>
+              <tr>
+                <td colspan="4">No items found.</td>
+              </tr>
+              <?php
+            }
+            ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </form>
+  <br>
+  <form id="edit_form" name="edit_form" method="post" action="<?php echo $this->getUrl('*/*/post') ?>">
+    <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+    <div class="entry-edit">
+      <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend">Add New Mapping</h4>
+      </div>
+      <fieldset id="grop_fields">
+        <table class="form-list">
+          <tr>
+            <td class="label">
+              <label for="gl_store">Store <span class="required">*</span> </label>
+            </td>
+            <td class="value">
+              <select class="input-text validate-select" name="gl_store" id="gl_store">
+                <option value="">&nbsp; --Select-- &nbsp;</option>
+                <?php
+                foreach ($unmapped_store_arr as $key => $unmapped_store) {
+                  ?>
+                  <option value="<?php echo $key ?>"><?php echo $unmapped_store ?></option>
+                  <?php
+                }
+                ?>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td class="label">
+              <label for="gl_locale_code">GlobalLink Locale <span class="required">*</span> </label>
+            </td>
+            <td class="value">
+              <select class="input-text validate-select" name="gl_locale_code" id="gl_locale_code">
+                <option value="">&nbsp; --Select-- &nbsp;</option>
+                <?php
+                foreach ($gl_locales as $gl_locale) {
+                  ?>
+                  <option value="<?php echo $gl_locale['gl_locale_code'] ?>"><?php echo $gl_locale['gl_locale_desc'] ?></option>
+                  <?php
+                }
+                ?>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td class="label">
+              <label for="gl_store">Default Source locale </label>
+            </td>
+            <td class="value">
+              <input type="checkbox" name="gl_default" id="gl_default" value="1"/>
+            </td>
+          </tr>
+        </table>
+        <br/>
+        <div><button onclick="editForm.submit()" class="scalable add" type="button"><span>Add Locale Mapping</span></button></div>
+      </fieldset>
+    </div>
+  </form>
+  <br>
+  <?php if (isset($mapped_locales) && count($mapped_locales) > 0) { ?>
+    <form id="default_form" name="default_form" method="post" action="<?php echo $this->getUrl('*/*/default') ?>">
+      <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+      <div class="entry-edit">
+        <div class="entry-edit-head">
+          <h4 class="icon-head head-edit-form fieldset-legend">Change Default Store</h4>
+        </div>
+        <fieldset id="grop_fields">
+          <table class="form-list">
+            <tr>
+              <td class="label">
+                <label for="gl_locale_code">Store <span class="required">*</span> </label>
+              </td>
+              <td class="value">
+                <select class="input-text validate-select" name="gl_store" id="gl_store">
+                  <option value="">&nbsp; --Select-- &nbsp;</option>
+                  <?php
+                  foreach ($mapped_store_arr as $key => $mapped_store) {
+                    if ($key == $default_store) {
+                      continue;
+                    }
+                    ?>
+                    <option value="<?php echo $key ?>"><?php echo $mapped_store ?></option>
+                    <?php
+                  }
+                  ?>
+                </select>
+              </td>
+              <td class="label"><button onclick="defaultForm.submit()" class="scalable save" type="button"><span>Change Default Store</span></button></td>
+            </tr>
+          </table>
+        </fieldset>
+      </div>
+    </form>
+  <?php } ?>
+  <script language='Javascript'>
+    function selectAll(obj) {
+      var checked = false;
+      if(obj.checked == true) {
+        checked = true;
+      }
+      $arr = document.getElementsByName("mapped_locale_code[]");
+      for (i=0;i<$arr.length;i++) {
+        $arr[i].checked = checked;
+      }
+    }
+    function checkSelectedRows() {
+      $arr = document.getElementsByName("mapped_locale_code[]");
+      if($arr != null && $arr != undefined) {
+        for (i=0;i<$arr.length;i++) {
+          if($arr[i].checked == true) {
+            return true;
+          }
+        }
+      }
+      alert('Please select items.');
+      return false;
+    }
+  </script>
+  <script type="text/javascript">
+    var editForm = new varienForm('edit_form');
+    var deleteForm = new varienForm('delete_form');
+    var defaultForm = new varienForm('default_form');
+  </script>
+  <?php
+}
+catch (Exception $ex) {
+  Mage::helper("globallink")->gl_debug($ex->getFile() . ' - Line ' . $ex->getLine() . ': Globallink PHTML Generic Error = ', $ex->getMessage());
+  $error_msg = 'Globallink WebService Error - ' . $ex->getMessage();
+}
+if (isset($error_msg) && $error_msg != '') {
+  ?>
+  <div class="entry-edit">
+    <span style="color:red;text-align: center"><?php echo $error_msg ?></span>
+  </div>
+  <?php
+}
+?>

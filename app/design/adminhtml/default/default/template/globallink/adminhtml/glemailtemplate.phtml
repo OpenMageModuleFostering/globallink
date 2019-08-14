@@ -1,0 +1,68 @@
+<?php
+try {
+  $gl_config_arr = Mage::helper("globallink")->get_gl_configurations();
+  $config_set = FALSE;
+  if (isset($gl_config_arr) && count($gl_config_arr) > 0) {
+    $config_set = TRUE;
+  }
+  if (!$config_set) {
+    ?>
+    <div class="entry-edit">
+      <span style="color:red;text-align: center">GlobalLink Configurations Not Found.</span>
+    </div>
+    <?php
+  }
+  else {
+    $_mapped_stores = $this->getMappedStores();
+    ?>
+    <div class="content-header">
+      <table cellspacing="0">
+        <tr>
+          <td style="width:50%;"><h3>GlobalLink - Translate Email Templates</h3></td>
+          <td class="a-right">
+            <button onclick="submitMassForm()" class="scalable add" type="button"><span> Create Submission </span></button>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <?php if (count($_mapped_stores) == 0) { ?>
+      <div id="staging_store_container">
+        <p class="switcher"><span style="color:red;text-align: center">GlobalLink Locale Mapping Not Found.</span></p>
+      </div>
+      <?php
+    }
+    else {
+      ?>
+      <div>
+        <?php echo $this->getGridHtml() ?>
+      </div>
+      <script type="text/javascript">
+        //<![CDATA[
+        if(document.getElementById("glemailtemplateGrid_massaction-select") != null
+          && document.getElementById("glemailtemplateGrid_massaction-select") != undefined) {
+          document.getElementById("glemailtemplateGrid_massaction-select").value = "add";
+          var form = $('glemailtemplateGrid_massaction-form');
+          $('glemailtemplateGrid_massaction-form').addClassName('no-display');
+          $('glemailtemplateGrid_product_filter_massaction').addClassName('no-display');
+        }
+        function submitMassForm() {
+          glemailtemplateGrid_massactionJsObject.apply();
+        }
+        //]]>
+      </script>
+      <?php
+    }
+  }
+}
+catch (Exception $ex) {
+  Mage::helper("globallink")->gl_debug($ex->getFile() . ' - Line ' . $ex->getLine() . ': Globallink PHTML Generic Error = ', $ex->getMessage());
+  $error_msg = 'Globallink Error - ' . $ex->getMessage();
+}
+if (isset($error_msg) && $error_msg != '') {
+  ?>
+  <div class="entry-edit">
+    <span style="color:red;text-align: center"><?php echo $error_msg ?></span>
+  </div>
+  <?php
+}
+?>

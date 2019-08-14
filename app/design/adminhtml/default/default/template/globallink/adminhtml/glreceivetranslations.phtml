@@ -1,0 +1,99 @@
+<?php
+try {
+  $gl_config_arr = Mage::helper("globallink")->get_gl_configurations();
+  $config_set = FALSE;
+  if (isset($gl_config_arr) && count($gl_config_arr) > 0) {
+    $config_set = TRUE;
+  }
+  if (!$config_set) {
+    ?>
+    <div class="entry-edit">
+      <span style="color:red;text-align: center">GlobalLink Configurations Not Found.</span>
+    </div>
+    <?php
+  }
+  else {
+    Mage::unregister('gl_target_arr');
+    $gl_arr = Mage::helper("globallink")->gl_get_all_completed_targets();
+    $count = is_array($gl_arr) ? count($gl_arr) : 0;
+    Mage::register('gl_target_arr', $gl_arr);
+    Mage::helper("globallink")->gl_debug("[" . __FILE__ . "][" . __LINE__ . "][" . __METHOD__ . "]", $count);
+    ?>
+    <div class="content-header">
+      <table cellspacing="0">
+        <tr>
+          <td style="width:50%;"><h3>GlobalLink - Receive Translations</h3></td>
+          <td class="a-right">
+            <button onclick="this.disabled=true;this.setAttribute('class', 'disabled');refreshForm.submit();" class="scalable" type="button"><span> Refresh </span></button>
+            <?php if ($count > 0): ?>
+              <button onclick="if(checkSelectedRows()){selectForm.submit()}" class="scalable save" type="button"><span> Update Selected Records </span></button>
+              <button onclick="updateForm.submit()" class="scalable save" type="button"><span> Update All Completed Records </span></button>
+              <button onclick="clearForm.submit()" class="scalable save" type="button"><span> Clear Deleted Records </span></button>
+            <?php endif; ?>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <?php if ($count == 0): ?>
+      <div id="staging_store_container">
+        <p class="switcher"><span style="color:red;text-align: center">No Completed Translations Found.</span></p>
+      </div>
+    <?php endif; ?>
+    <?php if ($count > 0): ?>
+      <form id="clear_form" name="clear_form" method="post" action="<?php echo $this->getUrl('*/*/clear') ?>">
+        <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+      </form>
+      <form id="update_form" name="update_form" method="post" action="<?php echo $this->getUrl('*/*/update') ?>">
+        <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+      </form>
+      <form id="select_form" name="select_form" method="post" action="<?php echo $this->getUrl('*/*/select') ?>">
+        <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+        <div>
+          <?php echo $this->getGridHtml() ?>
+        </div>
+      </form>
+    <?php endif; ?>
+    <form id="refresh_form" name="refresh_form" method="post" action="<?php echo $this->getUrl('*/*/refresh') ?>">
+      <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+    </form>
+    <script type="text/javascript">
+      function checkSelectedRows() {
+        $success = false;
+        $arr = document.getElementsByName("gl_status_ids[]");
+        if($arr != null && $arr != undefined) {
+          for (i=0;i<$arr.length;i++) {
+            if($arr[i].checked == true) {
+              $success = true;
+            }
+          }
+          if(!$success) {
+            alert('Please select items.');
+            return false;
+          }
+        } else {
+          return false;
+        }
+        return true;
+      }
+    </script>
+    <script type="text/javascript">
+      var selectForm = new varienForm('select_form');
+      var updateForm = new varienForm('update_form');
+      var refreshForm = new varienForm('refresh_form');
+      var clearForm = new varienForm('clear_form');
+    </script>
+    <?php
+  }
+}
+catch (Exception $ex) {
+  Mage::helper("globallink")->gl_debug($ex->getFile() . ' - Line ' . $ex->getLine() . ': Globallink PHTML Generic Error = ', $ex->getMessage());
+  $error_msg = 'Globallink WebService Error - ' . $ex->getMessage();
+}
+if (isset($error_msg) && $error_msg != '') {
+  ?>
+  <div class="entry-edit">
+    <span style="color:red;text-align: center"><?php echo $error_msg ?></span>
+  </div>
+  <?php
+}
+?>

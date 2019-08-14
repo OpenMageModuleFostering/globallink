@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<layout>
+    <adminhtml_catalog_product_edit>
+        <reference name="product_tabs">
+            <action method="addTab">
+                <name>my_global_link_tab</name>
+                <block>globallink/adminhtml_catalog_product_adaptor</block>
+            </action>
+        </reference>
+    </adminhtml_catalog_product_edit>
+    <globallink_adminhtml_glproduct_index>
+        <reference name="content">
+            <block type="globallink/adminhtml_glproduct" name="glproduct"/>
+        </reference>
+    </globallink_adminhtml_glproduct_index>
+    <globallink_adminhtml_glcategory_index>
+        <reference name="content">
+            <block type="globallink/adminhtml_glcategory" name="glcategory"/>
+        </reference>
+    </globallink_adminhtml_glcategory_index>
+    <globallink_adminhtml_glcmspage_index>
+        <reference name="content">
+            <block type="globallink/adminhtml_glcmspage" name="glcmspage"/>
+        </reference>
+    </globallink_adminhtml_glcmspage_index>
+    <globallink_adminhtml_glcmsblock_index>
+        <reference name="content">
+            <block type="globallink/adminhtml_glcmsblock" name="glcmsblock"/>
+        </reference>
+    </globallink_adminhtml_glcmsblock_index>
+    <globallink_adminhtml_glemailtemplate_index>
+        <reference name="content">
+            <block type="globallink/adminhtml_glemailtemplate" name="glemailtemplate"/>
+        </reference>
+    </globallink_adminhtml_glemailtemplate_index>
+    <globallink_adminhtml_glnewslettertemplate_index>
+        <reference name="content">
+            <block type="globallink/adminhtml_glnewslettertemplate" name="glnewslettertemplate"/>
+        </reference>
+    </globallink_adminhtml_glnewslettertemplate_index>
+    <globallink_adminhtml_glactivesubmissions_index>
+        <reference name="content">
+            <block type="globallink/adminhtml_glactivesubmissions" name="glactivesubmissions"/>
+        </reference>
+    </globallink_adminhtml_glactivesubmissions_index>
+    <globallink_adminhtml_glreceivetranslations_index>
+        <reference name="content">
+            <block type="globallink/adminhtml_glreceivetranslations" name="glreceivetranslations"/>
+        </reference>
+    </globallink_adminhtml_glreceivetranslations_index>
+    <globallink_adminhtml_glfield_index>
+        <reference name="content">
+            <block type="globallink/adminhtml_glfield" name="glfield"/>
+        </reference>
+    </globallink_adminhtml_glfield_index>
+    <globallink_adminhtml_glproductattributes_index>
+        <reference name="content">
+            <block type="globallink/adminhtml_glproductattributes" name="glproductattributes"/>
+        </reference>
+    </globallink_adminhtml_glproductattributes_index>
+</layout>

@@ -1,0 +1,110 @@
+<?php
+try {
+  $gl_config_arr = Mage::helper("globallink")->get_gl_configurations();
+  $config_set = FALSE;
+  if (isset($gl_config_arr) && count($gl_config_arr) > 0) {
+    $config_set = TRUE;
+  }
+  if (!$config_set) {
+    ?>
+    <div class="entry-edit">
+      <span style="color:red;text-align: center">GlobalLink Configurations Not Found.</span>
+    </div>
+    <?php
+  }
+  else {
+    $selected_submission_name = urldecode($this->getRequest()->getParam('selected_submission_name', ''));
+    $_submissions = Mage::helper("globallink")->getActiveSubmissionNames();
+    Mage::helper("globallink")->gl_debug("glactivesubmissions phtml", $selected_submission_name);
+    ?>
+    <div class="content-header">
+      <table cellspacing="0">
+        <tr>
+          <td style="width:50%;"><h3>GlobalLink - Active Submissions</h3></td>
+          <td class="a-right">
+            <?php if (count($_submissions) > 0): ?>
+              <button onclick="if(checkSelectedRows()){selectForm.submit()}" class="scalable save" type="button"><span> Cancel Selected Records </span></button>
+            <?php endif; ?>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <?php if (count($_submissions) > 0): ?>
+      <div id="staging_store_container">
+        <p class="switcher"><label for="selected_submission_name"><b><?php echo $this->__('Choose Submission:') ?></b>&nbsp;&nbsp;</label>
+          <select name="selected_submission_name" id="selected_submission_name" class="left-col-block" onchange="return switchStore(this);">
+            <option value=""> -- Select -- </option>
+            <?php foreach ($_submissions as $_submission): ?>
+              <option value="<?php echo urlencode($_submission); ?>" <?php if ($selected_submission_name == $_submission): ?> selected="selected"<?php endif; ?>><?php echo $this->escapeHtml($_submission) ?></option>
+            <?php endforeach; ?>
+          </select>
+          <?php if ($selected_submission_name != ''): ?>
+            &nbsp;&nbsp;&nbsp;&nbsp;<button onclick="submissionForm.submit()" class="scalable save" type="button"><span> Cancel Submission </span></button>
+          <?php endif; ?>
+        </p>
+      </div>
+    <?php endif; ?>
+    <?php if (count($_submissions) == 0): ?>
+      <div id="staging_store_container">
+        <p class="switcher"><span style="color:red;text-align: center">Currently there are no active submissions.</span></p>
+      </div>
+    <?php endif; ?>
+    <?php if ($selected_submission_name != ''): ?>
+      <form id="submission_form" name="submission_form" method="post" action="<?php echo $this->getUrl('*/*/cancel') ?>">
+        <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+        <input type="hidden" name="selected_submission_name" value="<?php echo $selected_submission_name ?>"/>
+      </form>
+    <?php endif; ?>
+    <?php if (count($_submissions) > 0): ?>
+      <form id="select_form" name="select_form" method="post" action="<?php echo $this->getUrl('*/*/select') ?>">
+        <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+        <input type="hidden" name="selected_submission_name" value="<?php echo $selected_submission_name ?>"/>
+        <div>
+          <?php echo $this->getGridHtml() ?>
+        </div>
+      </form>
+      <script type="text/javascript">
+        function switchStore(obj) {
+          var storeParam = obj.value ? 'selected_submission_name/' + obj.value + '/' : '';
+          setLocation('<?php echo $this->getUrl('*/*') ?>' + storeParam);
+          return true;
+        }
+        function checkSelectedRows() {
+          $success = false;
+          $arr = document.getElementsByName("gl_status_ids[]");
+          if($arr != null && $arr != undefined) {
+            for (i=0;i<$arr.length;i++) {
+              if($arr[i].checked == true) {
+                $success = true;
+              }
+            }
+            if(!$success) {
+              alert('Please select items.');
+              return false;
+            }
+          } else {
+            return false;
+          }
+          return true;
+        }
+      </script>
+      <script type="text/javascript">
+        var selectForm = new varienForm('select_form');
+        var submissionForm = new varienForm('submission_form');
+      </script>
+    <?php endif; ?>
+    <?php
+  }
+}
+catch (Exception $ex) {
+  Mage::helper("globallink")->gl_debug($ex->getFile() . ' - Line ' . $ex->getLine() . ': Globallink PHTML Generic Error = ', $ex->getMessage());
+  $error_msg = 'Globallink WebService Error - ' . $ex->getMessage();
+}
+if (isset($error_msg) && $error_msg != '') {
+  ?>
+  <div class="entry-edit">
+    <span style="color:red;text-align: center"><?php echo $error_msg ?></span>
+  </div>
+  <?php
+}
+?>

@@ -1,0 +1,108 @@
+<?php
+try {
+  $gl_config_arr = Mage::helper("globallink")->get_gl_configurations();
+  $config_set = FALSE;
+  if (isset($gl_config_arr) && count($gl_config_arr) > 0) {
+    $config_set = TRUE;
+  }
+  if (!$config_set) {
+    ?>
+    <div class="entry-edit">
+      <span style="color:red;text-align: center">GlobalLink Configurations Not Found.</span>
+    </div>
+    <?php
+  }
+  else {
+    $_mapped_stores = $this->getMappedStores();
+    ?>
+    <div class="content-header">
+      <table cellspacing="0">
+        <tr>
+          <td style="width:50%;"><h3>GlobalLink - Translate CMS Blocks</h3></td>
+          <td class="a-right">
+            <button onclick="submitMassForm()" class="scalable add" type="button"><span> Create Submission </span></button>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <?php if (count($_mapped_stores) == 0) { ?>
+      <div id="staging_store_container">
+        <p class="switcher"><span style="color:red;text-align: center">GlobalLink Locale Mapping Not Found.</span></p>
+      </div>
+      <?php
+    }
+    else {
+      $selected_store_id = $this->getRequest()->getParam('store', '');
+      if ($selected_store_id == '') {
+        $selected_store_id = Mage::helper("globallink")->get_default_gl_store_id();
+      }
+      ?>
+      <?php if (!$this->isSingleStoreMode()): ?>
+        <?php
+        $source_store = array();
+        $_mapped_stores = $this->getMappedStores();
+        Mage::helper("globallink")->gl_debug("gl_category phtml", $_mapped_stores);
+        ?>
+        <?php if (count($_mapped_stores) > 0): ?>
+          <div id="staging_store_container">
+            <div class="switcher">
+              <p><label for="source_lang_store"><b><?php echo $this->__('Choose Store View:') ?></b>&nbsp;&nbsp;</label>
+                <select name="source_lang_store" id="source_lang_store" class="left-col-block" onchange="return switchStore(this);">
+                  <option value=""> -- Select --</option>
+                  <?php foreach ($_mapped_stores as $_store): ?>
+                    <?php
+                    if ($selected_store_id == $_store['store_id']) {
+                      $source_store = $_store;
+                    }
+                    ?>
+                    <option value="<?php echo $_store['store_id'] ?>" <?php if ($selected_store_id == $_store['store_id']): ?> selected="selected"<?php endif; ?>><?php echo $this->escapeHtml($_store['store_name']) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </p>
+            </div>
+          </div>
+        <?php endif; ?>
+      <?php endif; ?>
+      <div>
+        <?php echo $this->getGridHtml() ?>
+      </div>
+      <script type="text/javascript">
+        //<![CDATA[
+        if(document.getElementById("glcmsblockGrid_massaction-select") != null
+          && document.getElementById("glcmsblockGrid_massaction-select") != undefined) {
+          document.getElementById("glcmsblockGrid_massaction-select").value = "add";
+          var form = $('glcmsblockGrid_massaction-form');
+          $('glcmsblockGrid_massaction-form').addClassName('no-display');
+          $('glcmsblockGrid_product_filter_massaction').addClassName('no-display');
+        }
+        function submitMassForm() {
+          var input = document.createElement("input");
+          input.setAttribute("type", "hidden");
+          input.setAttribute("name", "store");
+          input.setAttribute("value", <?php echo $selected_store_id ?>);
+          document.getElementById("glcmsblockGrid_massaction-form").appendChild(input);
+          glcmsblockGrid_massactionJsObject.apply();
+        }
+        function switchStore(obj) {
+          var storeParam = obj.value ? 'store/' + obj.value + '/' : '';
+          setLocation('<?php echo $this->getUrl('*/*') ?>' + storeParam);
+          return true;
+        }
+        //]]>
+      </script>
+      <?php
+    }
+  }
+}
+catch (Exception $ex) {
+  Mage::helper("globallink")->gl_debug($ex->getFile() . ' - Line ' . $ex->getLine() . ': Globallink PHTML Generic Error = ', $ex->getMessage());
+  $error_msg = 'Globallink Error - ' . $ex->getMessage();
+}
+if (isset($error_msg) && $error_msg != '') {
+  ?>
+  <div class="entry-edit">
+    <span style="color:red;text-align: center"><?php echo $error_msg ?></span>
+  </div>
+  <?php
+}
+?>

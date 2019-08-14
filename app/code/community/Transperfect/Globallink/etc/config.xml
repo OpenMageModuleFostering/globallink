@@ -1,0 +1,228 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Transperfect_Globallink>
+            <version>1.0.0</version>
+        </Transperfect_Globallink>
+    </modules>
+    <global>
+        <blocks>
+            <globallink>
+                <class>Transperfect_Globallink_Block</class>
+            </globallink>
+        </blocks>
+        <models>
+            <globallink>
+                <class>Transperfect_Globallink_Model</class>
+                <resourceModel>globallink_mysql4</resourceModel>
+            </globallink>
+            <globallink_mysql4>
+                <class>Transperfect_Globallink_Model_Mysql4</class>
+                <entities>
+                    <glstatus>
+                        <table>globallink_status</table>
+                    </glstatus>
+                    <glfield>
+                        <table>globallink_field</table>
+                    </glfield>
+                </entities>
+            </globallink_mysql4>
+        </models>
+        <events>
+          <catalog_product_save_before>
+            <observers>
+              <transperfect_globallink_product_update>
+                <type>singleton</type>
+                <class>Transperfect_Globallink_Model_Observer</class>
+                <method>product_update</method>
+              </transperfect_globallink_product_update>  
+            </observers>
+          </catalog_product_save_before>
+          <catalog_category_prepare_save>
+            <observers>
+              <transperfect_globallink_category_update>
+                  <type>singleton</type>
+                  <class>Transperfect_Globallink_Model_Observer</class>
+                  <method>category_update</method>
+              </transperfect_globallink_category_update>  
+            </observers>
+          </catalog_category_prepare_save>
+        </events>
+        <helpers>
+            <globallink>
+                <class>Transperfect_Globallink_Helper</class>
+            </globallink>
+        </helpers>
+        <resources>
+            <globallink_setup>
+                <setup>
+                    <module>Transperfect_Globallink</module>
+                    <class> Transperfect_Globallink_Model_Resource_Mysql4_Setup</class>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </globallink_setup>
+            <globallink_write>
+                <connection>
+                    <use>core_write</use>
+                </connection>
+            </globallink_write>
+            <globallink_read>
+                <connection>
+                    <use>core_read</use>
+                </connection>
+            </globallink_read>
+        </resources>
+    </global>
+    <admin>
+        <routers>
+            <globallink>
+                <use>admin</use>
+                <args>
+                    <module>Transperfect_Globallink</module>
+                    <frontName>globallink</frontName>
+                </args>
+            </globallink>
+        </routers>
+    </admin>
+    <adminhtml>
+        <menu>
+            <globalLinkHeader translate="title" module="globallink">
+                <title>GlobalLink</title>
+                <sort_order>60</sort_order>
+                <children>
+                    <globallink_sendfortranslation translate="title" module="globallink">
+                        <title>Send for Translation</title>
+                        <sort_order>10</sort_order>
+                        <children>
+                            <globallink_sendproduct translate="title" module="globallink">
+                                <title>Products</title>
+                                <action>globallink/adminhtml_glproduct</action>
+                                <sort_order>10</sort_order>
+                            </globallink_sendproduct>
+                            <globallink_sendcategory translate="title" module="globallink">
+                                <title>Product Categories</title>
+                                <action>globallink/adminhtml_glcategory</action>
+                                <sort_order>20</sort_order>
+                            </globallink_sendcategory>
+                            <globallink_sendproductattribute translate="title" module="globallink">
+                                <title>Product Attributes</title>
+                                <action>globallink/adminhtml_glproductattributes</action>
+                                <sort_order>30</sort_order>
+                            </globallink_sendproductattribute>
+                            <globallink_sendcmspage translate="title" module="globallink">
+                                <title>CMS Pages</title>
+                                <action>globallink/adminhtml_glcmspage</action>
+                                <sort_order>40</sort_order>
+                            </globallink_sendcmspage>
+                            <globallink_sendcmsblock translate="title" module="globallink">
+                                <title>CMS Blocks</title>
+                                <action>globallink/adminhtml_glcmsblock</action>
+                                <sort_order>50</sort_order>
+                            </globallink_sendcmsblock>
+                            <globallink_sendemailtemplate translate="title" module="globallink">
+                                <title>Transactional Emails</title>
+                                <action>globallink/adminhtml_glemailtemplate</action>
+                                <sort_order>60</sort_order>
+                            </globallink_sendemailtemplate>
+                            <globallink_sendnewslettertemplate translate="title" module="globallink">
+                                <title>Newsletter Templates</title>
+                                <action>globallink/adminhtml_glnewslettertemplate</action>
+                                <sort_order>70</sort_order>
+                            </globallink_sendnewslettertemplate>
+                        </children>
+                    </globallink_sendfortranslation>                    
+                    <globallink_activesubmissionform module="globallink">
+                        <title>Active Submissions</title>
+                        <action>globallink/adminhtml_glactivesubmissions</action>
+                        <sort_order>20</sort_order>
+                    </globallink_activesubmissionform>
+                    <globallink_receivetranslationsform module="globallink">
+                        <title>Receive Translations</title>
+                        <action>globallink/adminhtml_glreceivetranslations</action>
+                        <sort_order>30</sort_order>
+                    </globallink_receivetranslationsform>                    
+                    <globallink_glfieldform module="globallink">
+                        <title>Field Configuration</title>
+                        <sort_order>40</sort_order>
+                        <children>
+                            <globallink_attributesets module="globallink">
+                                <title>Product Attributes</title>
+                                <action>globallink/adminhtml_attributesets</action>
+                                <sort_order>10</sort_order>
+                            </globallink_attributesets>
+                            <globallink_categoryform translate="title" module="globallink">
+                                <title>Product Categories</title>
+                                <action>globallink/adminhtml_glfield/index/selected_object_type/catalog-category</action>
+                                <sort_order>20</sort_order>
+                            </globallink_categoryform>
+                            <globallink_cmspageform translate="title" module="globallink">
+                                <title>CMS Pages</title>
+                                <action>globallink/adminhtml_glfield/index/selected_object_type/cms-page</action>
+                                <sort_order>30</sort_order>
+                            </globallink_cmspageform>
+                            <globallink_cmsblockform translate="title" module="globallink">
+                                <title>CMS Blocks</title>
+                                <action>globallink/adminhtml_glfield/index/selected_object_type/cms-block</action>
+                                <sort_order>40</sort_order>
+                            </globallink_cmsblockform>
+                            <globallink_emailform translate="title" module="globallink">
+                                <title>Transactional Emails</title>
+                                <action>globallink/adminhtml_glfield/index/selected_object_type/adminhtml-email_template</action>
+                                <sort_order>50</sort_order>
+                            </globallink_emailform>
+                            <globallink_newsform translate="title" module="globallink">
+                                <title>Newsletter Templates</title>
+                                <action>globallink/adminhtml_glfield/index/selected_object_type/newsletter-template</action>
+                                <sort_order>60</sort_order>
+                            </globallink_newsform>
+                        </children>
+                    </globallink_glfieldform>
+                    <globallink_configform translate="title" module="globallink">
+                        <title>GlobalLink Configuration</title>
+                        <sort_order>50</sort_order>
+                        <children>
+                            <globallink_configform translate="title" module="globallink">
+                                <title>Settings</title>
+                                <action>globallink/adminhtml_configuration</action>
+                                <sort_order>10</sort_order>
+                            </globallink_configform>
+                            <globallink_configsets translate="title" module="globallink">
+                                <title>Locale Mapping</title>
+                                <action>globallink/adminhtml_localeconfig</action>
+                                <sort_order>20</sort_order>
+                            </globallink_configsets>
+                        </children>
+                    </globallink_configform>
+                </children>
+            </globalLinkHeader>
+        </menu>
+        <layout>
+            <updates>
+                <globallink>
+                    <file>globallink.xml</file>
+                </globallink>
+            </updates>
+        </layout>
+    </adminhtml>
+    <acl>
+        <resources>
+            <all>
+                <title>Allow Everything</title>
+            </all>
+        </resources>
+    </acl>
+    <crontab>
+      <jobs>
+        <globallink_cron_update>
+          <schedule>
+            <cron_expr>*/5 * * * *</cron_expr>
+          </schedule>
+          <run>
+            <model>globallink/observer::run_cron</model>
+          </run>
+        </globallink_cron_update>
+      </jobs>
+    </crontab>
+</config>

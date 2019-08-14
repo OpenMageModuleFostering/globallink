@@ -1,0 +1,281 @@
+<?php
+try {
+  $gl_config_arr = Mage::helper("globallink")->get_gl_configurations();
+  $config_set = FALSE;
+  if (isset($gl_config_arr) && count($gl_config_arr) > 0) {
+    $config_set = TRUE;
+  }
+  ?>
+
+  <?php
+  if (!$config_set) {
+    ?>
+    <div class="entry-edit">
+      <span style="color:red;text-align: center">GlobalLink Configurations Not Found.</span>
+    </div>
+    <?php
+  }
+  else {
+    $current_url = $this->helper('core/url')->getCurrentUrl();
+    $params = $this->getRequest()->getParams();
+    $current_store = isset($params['store']) ? $params['store'] : 0;
+    $gl_target_arr = Mage::helper("globallink")->get_mapped_locales();
+    $source_locale_code = '';
+    $source_locale_desc = '';
+    foreach ($gl_target_arr as $locale) {
+      if ($locale['store_id'] == $current_store) {
+        $source_locale_code = $locale['gl_locale_code'];
+        $source_locale_desc = $locale['gl_locale_desc'];
+      }
+    }
+
+    if ($source_locale_code == '') {
+      ?>
+      <div class="entry-edit">
+        <span style="color:red;text-align: center">No GlobalLink locale mapping found for the current store view.</span>
+      </div>
+      <?php
+    }
+    else {
+      $_productId = $this->getProductId();
+      $model = Mage::getModel('catalog/product');
+      $_product = $model->setStoreId($current_store)->load($_productId);
+      $_productName = $_product->getName();
+      $attributes = $_product->getAttributes();
+      ?>
+      <div class="content-header">
+        <table cellspacing="0" class="grid-header">
+          <tr>
+            <td><h3>GlobalLink</h3></td>
+            <td class="a-right">
+              <button onclick="if(checkSelectedRows()){adaptorForm.submit()}" class="scalable save" type="button"><span>Submit to GlobalLink</span></button>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <form id="adaptor_form" name="adaptor_form" method="post" action="<?php echo $this->getUrl('globallink/adminhtml_adaptor/post') ?>">
+        <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+        <input name="product_id" type="hidden" value="<?php echo $_productId ?>" />
+        <input name="current_url" type="hidden" value="<?php echo $current_url ?>" />
+        <div class="entry-edit">
+          <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend">GlobalLink Submission Details</h4>
+          </div>
+        </div>
+        <br/>
+        <fieldset id="group_fields">
+          <table class="form-list" >
+            <tr>
+              <td class="label">
+                <label for="gl_submission_name">Submission Name <span class="required">*</span> </label>
+              </td>
+              <td class="value">
+                <input type="text" class="input-text required-entry" name="gl_submission_name" id="gl_submission_name" size="120"
+                       value="<?php echo "Magento-" . $_productName . "-" . time() ?>" />
+              </td>
+            </tr>
+            <tr>
+              <td class="label">
+                <label for="gl_due_date">Due Date <span class="required">*</span> </label>
+              </td>
+              <td class="value">
+                <input type="text" class="input-text required-entry" name="gl_due_date" id="gl_due_date" value='<?php echo date("m/d/Y", strtotime('+2 week')); ?>'/>
+                <img src="<?php echo $this->getSkinUrl('images/grid-cal.gif'); ?>" width="16" height="16" border="0" alt="Pick a date" id="gl_due_date_image" style="vertical-align: middle;">
+              </td>
+            </tr>
+            <tr>
+              <td class="label">
+                <label for="gl_project">Project Name <span class="required">*</span> </label>
+              </td>
+              <td class="value">
+                <select id="gl_project" name="gl_project" class="validate-select">
+                  <?php
+                  $proj_arr = Mage::helper("globallink")->get_pd_user_projects();
+                  foreach ($proj_arr as $code => $name) {
+                    ?>
+                    <option value="<?php echo $code ?>"><?php echo $name ?></option>
+                    <?php
+                  }
+                  ?>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td class="label">
+                <label for="gl_priority">Priority <span class="required">*</span> </label>
+              </td>
+              <td class="value">
+                <select id="gl_priority" name="gl_priority" class="validate-select">
+                  <option value="2">High </option>
+                  <option value="1" selected>Normal </option>
+                  <option value="0">Low </option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td class="label">
+                <label for="gl_source_locale">Source Language </label>
+              </td>
+              <td class="value">
+                <input type="hidden" name="gl_source_locale" value="<?php echo $source_locale_code ?>"/>
+                <?php echo $source_locale_desc ?>
+              </td>
+            </tr>
+            <tr>
+              <td class="label">
+                <label for="gl_target_locale">Target Language(s) <span class="required">*</span> </label>
+              </td>
+              <td class="value">
+                <?php
+                foreach ($gl_target_arr as $locale) {
+                  if ($locale['store_id'] != $current_store) {
+                    $locale_code = $locale['gl_locale_code'];
+                    $locale_desc = $locale['gl_locale_desc'];
+                    ?>
+                    <input type="checkbox" name="gl_target_locales[]" value='<?php echo $locale_code ?>'/> &nbsp;&nbsp;<?php echo $locale_desc ?>&nbsp;&nbsp;<br/>
+                    <?php
+                  }
+                }
+                ?>
+              </td>
+            </tr>
+          </table>
+        </fieldset>
+        <br/>
+        <div class="entry-edit">
+          <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend">Product Details</h4>
+          </div>
+        </div>
+        <div class="grid">
+          <table cellspacing="2" cellpadding="10" class="data">
+            <thead>
+              <tr class="headings">
+                <th class="no-link" style="width:5%;"><input type='checkbox' id='selectAllCheckBox' onclick="javascript:selectAll(this);" checked/>&nbsp;&nbsp;Translate?&nbsp;</th>
+                <th class="no-link" style="width:35%">Attribute Type</th>
+                <th class="no-link" style="width:60%">Text</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              foreach ($attributes as $attribute) {
+                if ($attribute->getIsVisible() && !$attribute->getIsGlobal()) {
+                  if ($attribute->getFrontendInput() == 'text' || $attribute->getFrontendInput() == 'textarea') {
+                    $value = $attribute->getFrontend()->getValue($_product);
+                    if (isset($value) && !is_array($value) && $value != '') {
+                      $name = $attribute->getFrontend()->getLabel($_product);
+                      $attributeId = $attribute->getId();
+                      ?>
+                      <tr>
+                        <td>
+                          <input type="checkbox" name="gl_product_attribute_ids[]" value="<?php echo $attributeId; ?>" checked />
+                        </td>
+                        <td class="label">
+                          <label for="description_label"><?php echo $name ?> </label>
+                        </td>
+                        <td class="value"><?php echo $value; ?></td>
+                      </tr>
+
+                      <?php
+                    }
+                  }
+                }
+              }
+              ?>
+            </tbody>
+          </table>
+        </div>
+      </form>
+      <script language='Javascript'>
+        function selectAll(obj) {
+          var checked = false;
+          if(obj.checked == true) {
+            checked = true;
+          }
+          $arr = document.getElementsByName("gl_product_attribute_ids[]");
+          for (i=0;i<$arr.length;i++) {
+            $arr[i].checked = checked;
+          }
+        }
+
+        function checkSelectedRows() {
+          $success = false;
+          $arr = document.getElementsByName("gl_product_attribute_ids[]");
+          if($arr != null && $arr != undefined) {
+            for (i=0;i<$arr.length;i++) {
+              if($arr[i].checked == true) {
+                $success = true;
+              }
+            }
+            if(!$success) {
+              alert('Please select at least one attribute to translate.');
+              return false;
+            }
+          } else {
+            return false;
+          }
+
+          $arr = document.getElementsByName("gl_target_locales[]");
+          if($arr != null && $arr != undefined) {
+            $count = 0;
+            for (i=0;i<$arr.length;i++) {
+              if($arr[i].checked) {
+                $count++;
+              }
+            }
+            if($count == 0) {
+              alert('Please select at least one target language.');
+              return false;
+            }
+          } else {
+            return false;
+          }
+
+          return true;
+        }
+
+        function changeSourceLocale(obj) {
+          $sourceLocale = obj.value;
+          $arr = document.getElementsByName("gl_target_locales[]");
+          if($arr != null && $arr != undefined) {
+            for (i=0;i<$arr.length;i++) {
+              if($arr[i].value == $sourceLocale) {
+                $arr[i].checked = false;
+                document.getElementById("div_" + $sourceLocale).style.display = "none";
+              } else {
+                $arr[i].checked = true;
+                document.getElementById("div_" + $arr[i].value).style.display = "block";
+              }
+            }
+          }
+        }
+      </script>
+      <script type="text/javascript">
+        Calendar.setup({
+          inputField : 'gl_due_date',
+          ifFormat : '%m/%e/%y',
+          button : 'gl_due_date_image',
+          align : 'Bl',
+          singleClick : true
+        });
+      </script>
+      <script type="text/javascript">
+        var adaptorForm = new varienForm('adaptor_form');
+      </script>
+
+      <?php
+    }
+  }
+}
+catch (Exception $ex) {
+  Mage::helper("globallink")->gl_debug($ex->getFile() . ' - Line ' . $ex->getLine() . ': Globallink PHTML Generic Error = ', $ex->getMessage());
+  $error_msg = 'Globallink WebService Error - ' . $ex->getMessage();
+}
+if (isset($error_msg) && $error_msg != '') {
+  ?>
+  <div class="entry-edit">
+    <span style="color:red;text-align: center"><?php echo $error_msg ?></span>
+  </div>
+  <?php
+}
+?>

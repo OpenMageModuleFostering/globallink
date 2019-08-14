@@ -1,0 +1,210 @@
+<?php
+try {
+  $gl_config_arr = Mage::helper("globallink")->get_gl_configurations();
+
+  $globallink_user_id = 0;
+  $globallink_project_id = 0;
+  $globallink_url = "";
+  $project_short_code = "";
+  $classifier = "";
+  $mime_type = "text/xml";
+  $files_per_submission = 9999;
+  $max_target_count = 9999;
+  $globallink_user_name = "";
+  $globallink_user_password = "";
+
+  foreach ($gl_config_arr as $gl_config) {
+    $globallink_project_id = isset($gl_config['globallink_project_id']) ? $gl_config['globallink_project_id'] : 0;
+    $globallink_user_id = isset($gl_config['globallink_user_id']) ? $gl_config['globallink_user_id'] : 0;
+    $globallink_url = isset($gl_config['globallink_url']) ? $gl_config['globallink_url'] : "";
+    $project_short_code = isset($gl_config['project_short_code']) ? $gl_config['project_short_code'] : "";
+    $classifier = isset($gl_config['classifier']) ? $gl_config['classifier'] : "";
+    $mime_type = isset($gl_config['mime_type']) ? $gl_config['mime_type'] : "text/xml";
+    $files_per_submission = isset($gl_config['files_per_submission']) ? $gl_config['files_per_submission'] : 9999;
+    $max_target_count = isset($gl_config['max_target_count']) ? $gl_config['max_target_count'] : 9999;
+    $globallink_user_name = isset($gl_config['globallink_user_name']) ? $gl_config['globallink_user_name'] : "";
+    $globallink_user_password = isset($gl_config['globallink_user_password']) ? $gl_config['globallink_user_password'] : "";
+  }
+  ?>
+
+  <div class="content-header">
+    <table cellspacing="0" class="grid-header">
+      <tr>
+        <td><h3>Settings</h3></td>
+      </tr>
+    </table>
+  </div>
+
+  <form id="edit_form" name="edit_form" method="post" action="<?php echo $this->getUrl('*/*/post') ?>">
+    <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+    <input name="globallink_project_id" type="hidden" value="<?php echo $globallink_project_id ?>" />
+    <input name="globallink_user_id" type="hidden" value="<?php echo $globallink_user_id ?>" />
+    <div class="entry-edit">
+      <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"> GlobalLink Settings </h4>
+      </div>
+      <fieldset id="grop_fields">
+        <table class="form-list" >
+          <tr>
+            <td class="label">
+              <label for="globallink_user_name">User Name <span class="required">*</span> </label>
+            </td>
+            <td class="value">
+              <input type="text" size="70" class="input-text required-entry" name="globallink_user_name" id="globallink_user_name" value='<?php echo $globallink_user_name ?>'/>
+            </td>
+          </tr>
+          <tr>
+            <td class="label">
+              <label for="globallink_user_password">Password <span class="required">*</span> </label>
+            </td>
+            <td class="value">
+              <input type="password" size="70" class="input-text required-entry" name="globallink_user_password" id="globallink_user_password" value='<?php echo $globallink_user_password ?>' />
+            </td>
+          </tr>
+
+          <tr>
+            <td class="label">
+              <label for="url_field">GlobalLink URL <span class="required">*</span> </label>
+            </td>
+            <td class="value">
+              <input type="text" size="70" class="input-text required-entry" name="globallink_url" id="globallink_url" value='<?php echo $globallink_url ?>'/>
+            </td>
+          </tr>
+          <tr>
+            <td class="label">
+              <label for="project_short_code">GlobalLink Short Code <span class="required">*</span> </label>
+              <span style="font-size: 11px; font-style: italic;">Enter comma separated codes for multiple projects.</span>
+            </td>
+            <td class="value">
+              <input type="text" size="70" class="input-text required-entry" name="project_short_code" id="project_short_code" value='<?php echo $project_short_code ?>'/>
+            </td>
+          </tr>
+          <tr>
+            <td class="label">
+              <label for="classifier">Classifier <span class="required">*</span> </label>
+            </td>
+            <td class="value">
+              <input type="text" size="70" class="input-text required-entry" name="classifier" id="classifier" value='<?php echo $classifier ?>'/>
+            </td>
+          </tr>
+<!--          <tr>
+            <td class="label">
+              <label for="mime_type">Mime Type <span class="required">*</span> </label>
+            </td>
+            <td class="value">
+              <input type="text" size="70" class="input-text required-entry" name="mime_type" id="mime_type" value='<?php echo $mime_type ?>'/>
+            </td>
+          </tr>-->
+<!--          <tr>
+            <td class="label">
+              <label for="files_per_submission">Max Files Per Submission <span class="required">*</span> </label>
+            </td>
+            <td class="value">
+              <input type="text" size="70" class="input-text required-entry" name="files_per_submission" id="files_per_submission" value='<?php echo $files_per_submission ?>'/>
+            </td>
+          </tr>-->
+          <tr>
+            <td class="label">
+              <label for="max_target_count">Max Target Count <span class="required">*</span> </label>
+            </td>
+            <td class="value">
+              <input type="text" size="70" class="input-text required-entry validate-number" name="max_target_count" id="max_target_count" value='<?php echo $max_target_count ?>'/>
+            </td>
+          </tr>
+          <tr>
+             <td class="label">
+            </td>
+            <td class="value">
+              <button onclick="if(validate()){editForm.submit()}" class="scalable save" type="button"><span>Save And Test GlobalLink Settings</span></button>
+            </td>
+          </tr>
+        </table>
+      </fieldset>
+    </div>
+
+  </form>
+
+  <script type="text/javascript">
+    var editForm = new varienForm('edit_form');
+  </script>
+  <script type="text/javascript">
+    function validateTargetCount(val){
+      if(val < 1 || isNaN(val)) {
+        document.getElementById("max_target_count").value = "";
+        alert("Max Target Count invalid.");
+        return false;
+      }
+      return true;
+    }
+    function validate(){
+      var shortCodeVal = document.getElementsByName("project_short_code")[0].value;
+      var targetCountVal = document.getElementsByName("max_target_count")[0].value;
+      var userNameVal = document.getElementsByName("globallink_user_name")[0].value;
+      var shortCodeArr = shortCodeVal.split("");
+      for (var i = 0, l = shortCodeArr.length; i < l; i++){
+        if (shortCodeArr[i] === shortCodeArr[i].toLowerCase() && isNaN(shortCodeArr[i]) 
+              && shortCodeArr[i] != " " && shortCodeArr[i] != ",") {
+          document.getElementById("project_short_code").value = "";
+          alert("Error: Enter only uppercase and comma separated Short Codes.");
+          return false;
+        } else if (shortCodeArr[0] == "," || shortCodeArr[shortCodeArr.length-1] == ",") {
+          document.getElementById("project_short_code").value = "";
+          alert("Error: Short Codes contain invalid commas.");
+          return false;
+        } else if (shortCodeArr[i] == ",") {
+          if (shortCodeArr[i] == shortCodeArr[i-1]) {
+            document.getElementById("project_short_code").value = "";
+            alert("Error: Short Codes contain invalid commas.");
+            return false;
+          }
+        }
+      }
+      var shortCodeVal = shortCodeVal.replace(/\s+/g, '');
+      document.getElementById("project_short_code").value = shortCodeVal;
+      if(!shortCodeVal.split(",").unique() || !validateTargetCount(targetCountVal)) return false;
+      var userNameArr = userNameVal.split("");
+      var regExp = /[^a-zA-Z0-9@._-]/;
+      for (var i = 0, l = userNameArr.length; i < l; i++){
+        if (regExp.test(userNameArr[i])) {      
+          document.getElementById("globallink_user_name").value = "";
+          alert("Error: User Name contains invalid characters.");
+          return false;
+        }
+      }
+      return true;
+    }
+    Array.prototype.contains = function(v) {
+      for(var i = 0; i < this.length; i++) {
+        if(this[i] === v) return true;
+      }
+      return false;
+    };
+    Array.prototype.unique = function() {
+      var arr = [];
+      for(var i = 0; i < this.length; i++) {
+        if(!arr.contains(this[i])) {
+          arr.push(this[i]);
+        } else {
+          document.getElementById("project_short_code").value = "";
+          alert("Error: Duplicate Short Code.");
+          return false;
+        }
+      }
+      return true; 
+    }   
+  </script>
+
+  <?php
+}
+catch (Exception $ex) {
+  Mage::helper("globallink")->gl_debug($ex->getFile() . ' - Line ' . $ex->getLine() . ': Globallink PHTML Generic Error = ', $ex->getMessage());
+  $error_msg = 'Globallink WebService Error - ' . $ex->getMessage();
+}
+if (isset($error_msg) && $error_msg != '') {
+  ?>
+  <div class="entry-edit">
+    <span style="color:red;text-align: center"><?php echo $error_msg ?></span>
+  </div>
+  <?php
+}
+?>

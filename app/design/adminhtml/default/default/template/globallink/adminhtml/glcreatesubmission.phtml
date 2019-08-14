@@ -1,0 +1,299 @@
+<?php
+try {
+  $gl_config_arr = Mage::helper("globallink")->get_gl_configurations();
+  $config_set = FALSE;
+  if (isset($gl_config_arr) && count($gl_config_arr) > 0) {
+    $config_set = TRUE;
+  }
+  $object_type = $this->getRequest()->getParam('gl_object_type', '');
+  $is_store_object = TRUE;
+  if ($object_type == Mage::helper("globallink")->_get_object_type_email()
+          || $object_type == Mage::helper("globallink")->_get_object_type_newsletter()) {
+    $is_store_object = FALSE;
+  }
+
+  if (!$config_set) {
+    ?>
+    <div class="entry-edit">
+      <span style="color:red;text-align: center">GlobalLink Configurations Not Found.</span>
+    </div>
+    <?php
+  }
+  else {
+    $selected_store_id = $this->getRequest()->getParam('store', '');
+    Mage::helper("globallink")->gl_debug('Selected store id', $selected_store_id);
+    $source_store = array();
+    $_mapped_stores = Mage::helper("globallink")->get_mapped_locales();
+    foreach ($_mapped_stores as $_store) {
+      if ($selected_store_id == $_store['store_id']) {
+        $source_store = $_store;
+        break;
+      }
+    }
+    ?>
+    <div class="content-header">
+      <table cellspacing="0">
+        <tr>
+          <td style="width:50%;"><h3>GlobalLink - Create Submission</h3></td>
+          <td class="a-right">
+            <button onclick="cancelForm.submit()" class="scalable back" type="button"><span> Back </span></button>
+            <?php if (count($_mapped_stores) != 0): ?>
+              <?php if (!$is_store_object): ?>
+                <button onclick="if(validateDate(null)&&validateTargetLocales()){submissionForm.submit()}" class="scalable save" type="button"><span> Send for Translation </span></button>
+              <?php endif; ?>
+              <?php if ($is_store_object): ?>
+                <button onclick="if(validateDate(null)){submissionForm.submit()}" class="scalable save" type="button"><span> Send for Translation </span></button>
+              <?php endif; ?>
+            <?php endif; ?>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <?php if (count($_mapped_stores) == 0) { ?>
+      <div id="staging_store_container">
+        <p class="switcher"><span style="color:red;text-align: center">GlobalLink Locale Mapping Not Found.</span></p>
+      </div>
+      <?php
+    }
+    else {
+      ?>
+      <form id="submission_form" name="submission_form" method="post" action="<?php echo $this->getUrl('*/*/send') ?>">
+        <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+        <?php
+        if ($is_store_object) {
+          ?>
+          <input type="hidden" name="gl_source_locale" value="<?php echo $source_store['gl_locale_code'] ?>"/>
+          <?php
+        }
+        ?>
+        <input type="hidden" name="object_type" value="<?php echo $object_type ?>"/>
+        <div class="entry-edit">
+          <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend">Enter GlobalLink Submission Details</h4>
+          </div>
+        </div>
+        <br/>
+        <fieldset id="group_fields">
+          <table class="form-list" >
+            <tr>
+              <td class="label">
+                <label for="gl_submission_name">Submission Name <span class="required">*</span> </label>
+              </td>
+              <td class="value">
+                <input type="text" name="gl_submission_name" id="gl_submission_name" size="120" class="input-text required-entry" />
+              </td>
+            </tr>
+            <tr>
+              <td class="label">
+                <label for="gl_due_date">Due Date <span class="required">*</span> </label>
+              </td>
+              <td class="value">
+                <input type="text" class="input-text required-entry" name="gl_due_date" id="gl_due_date" value='<?php echo date("m/d/Y", strtotime('+2 week')); ?>' readonly/>
+                <img src="<?php echo $this->getSkinUrl('images/grid-cal.gif'); ?>" width="16" height="16" border="0" alt="Pick a date" id="gl_due_date_image" style="vertical-align: middle;">
+              </td>
+            </tr>
+            <tr>
+              <td class="label">
+                <label for="gl_project">Project Name <span class="required">*</span> </label>
+              </td>
+              <td class="value">
+                <select id="gl_project" name="gl_project" class="validate-select">
+                  <?php
+                  $proj_arr = Mage::helper("globallink")->get_pd_user_projects();
+                  foreach ($proj_arr as $code => $name) {
+                    ?>
+                    <option value="<?php echo $code ?>"><?php echo $name ?></option>
+                    <?php
+                  }
+                  ?>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td class="label">
+                <label for="gl_priority">Priority <span class="required">*</span> </label>
+              </td>
+              <td class="value">
+                <select id="gl_priority" name="gl_priority" class="validate-select">
+                  <option value="2">High </option>
+                  <option value="1" selected>Normal </option>
+                  <option value="0">Low </option>
+                </select>
+              </td>
+            </tr>
+            <?php
+            if (!$is_store_object) {
+              ?>
+              <tr>
+                <td class="label">
+                  <label for="gl_source_locale">Source Language <span class="required">*</span> </label>
+                </td>
+                <td class="value">
+                  <select id="gl_source_locale" name="gl_source_locale" class="validate-select" onchange="javascript:changeSourceLocale(this);">
+                    <option value="">&nbsp; --Select-- &nbsp;</option>
+                    <?php
+                    foreach ($_mapped_stores as $locale) {
+                      $locale_code = $locale['gl_locale_code'];
+                      $locale_desc = $locale['gl_locale_desc'];
+                      ?>
+                      <option value="<?php echo $locale_code ?>"><?php echo $locale_desc ?></option>
+                      <?php
+                    }
+                    ?>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td class="label">
+                  <label for="gl_target_locales">Target Language(s) <span class="required">*</span> </label>
+                </td>
+                <td class="value">
+                  <?php
+                  $_c = 0;
+                  foreach ($_mapped_stores as $locale) {
+                    $locale_code = $locale['gl_locale_code'];
+                    $locale_desc = $locale['gl_locale_desc'];
+                    ?>
+                    <div id="chk_<?php echo $locale_code ?>" >
+                      <input type="checkbox" name="gl_target_locales[]" id="<?php echo $locale_code ?>" value="<?php echo $locale_code ?>" /><label id="label_<?php echo $locale_code ?>" for="<?php echo $locale_code ?>"> &nbsp;&nbsp;<?php echo $locale_desc ?>&nbsp;&nbsp;</label><br/>
+                    </div>
+                    <?php
+                  }
+                  ?>
+                </td>
+              </tr>
+              <?php
+            }
+            else {
+              ?>
+              <tr>
+                <td class="label">
+                  <label for="gl_source_locale">Source Language <span class="required">*</span> </label>
+                </td>
+                <td class="value">
+                  <?php echo $source_store['gl_locale_desc'] ?>
+                </td>
+              </tr>
+              <tr>
+                <td class="label">
+                  <label for="gl_target_locales">Target Language(s) <span class="required">*</span> </label>
+                </td>
+                <td class="value">
+                  <?php
+                  $_c = 0;
+                  foreach ($_mapped_stores as $locale) {
+                    $locale_code = $locale['gl_locale_code'];
+                    if ($locale_code != $source_store['gl_locale_code']) {
+                      $_c++;
+                      $locale_desc = $locale['gl_locale_desc'];
+                      $val = "";
+                      if ($_c == (count($_mapped_stores) - 1)) {
+                        $val = "class=\"validate-one-required\"";
+                      }
+                      ?>
+                      <input type="checkbox" name="gl_target_locales[]" id="<?php echo $locale_code ?>" value="<?php echo $locale_code ?>" /><label id="label_<?php echo $locale_code ?>" for="<?php echo $locale_code ?>"> &nbsp;&nbsp;<?php echo $locale_desc ?>&nbsp;&nbsp;</label><br/>
+                      <?php
+                    }
+                  }
+                  ?>
+                </td>
+              </tr>
+              <?php
+            }
+            ?>
+            <tr>
+              <td class="label">
+                <label for="gl_submission_instructions">Submission Instructions</label>
+              </td>
+              <td class="value">
+                <textarea  cols="20" rows="10" id="gl_submission_instructions" name="gl_submission_instructions" maxlength="1024" style="resize: none;height: 4em"></textarea>
+              </td>
+            </tr>
+          </table>
+        </fieldset>
+      </form>
+      <form id="cancel_form" name="cancel_form" method="post" action="<?php echo $this->getUrl('*/*/cancel') ?>">
+        <input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+        <input type="hidden" name="object_type" value="<?php echo $object_type ?>"/>
+        <input type="hidden" name="store" value="<?php echo $selected_store_id ?>"/>
+      </form>
+      <script type="text/javascript">
+        var submissionForm = new varienForm('submission_form');
+        var cancelForm = new varienForm('cancel_form');
+      </script>
+      <script type="text/javascript">
+        //<![CDATA[
+        function validateDate(cal) {        
+          if (cal != null) {
+            $date = cal.date;
+          } else {
+            $dateField = document.getElementsByName("gl_due_date")[0].value;
+            $date = new Date($dateField);
+          }
+          if(new Date()>$date) {
+            document.getElementById("gl_due_date").value = "";
+            alert('Please select a future date.');
+            return false;
+          }
+          return true;
+        }
+        Calendar.setup({
+          inputField : 'gl_due_date',
+          ifFormat : '%m/%e/%Y',
+          button : 'gl_due_date_image',
+          align : 'Bl',
+          singleClick : true,
+          onUpdate : validateDate
+        });
+        function changeSourceLocale(obj) {
+          $sourceLocale = obj.value;
+          $arr = document.getElementsByName("gl_target_locales[]");
+          if($arr != null && $arr != undefined) {
+            for (i=0;i<$arr.length;i++) {
+              if($arr[i].value == $sourceLocale) {
+                $arr[i].checked = false;
+                document.getElementById("chk_" + $sourceLocale).style.display = "none";
+              } else {
+                $arr[i].checked = false;
+                document.getElementById("chk_" + $arr[i].value).style.display = "block";
+              }
+
+            }
+          }
+        }
+        function validateTargetLocales() {
+          $arr = document.getElementsByName("gl_target_locales[]");
+          if($arr != null && $arr != undefined) {
+            $count = 0;
+            for (i=0;i<$arr.length;i++) {
+              if($arr[i].checked) {
+                $count++;
+              }
+            }
+            if($count == 0) {
+              alert('Please select at least one target language.');
+              return false;
+            }
+          } else {
+            return false;
+          }
+          return true;
+        }
+        //]]>
+      </script>
+      <?php
+    }
+  }
+}
+catch (Exception $ex) {
+  Mage::helper("globallink")->gl_debug($ex->getFile() . ' - Line ' . $ex->getLine() . ': Globallink PHTML Generic Error = ', $ex->getMessage());
+  $error_msg = 'Globallink WebService Error - ' . $ex->getMessage();
+}
+if (isset($error_msg) && $error_msg != '') {
+  ?>
+  <div class="entry-edit">
+    <span style="color:red;text-align: center"><?php echo $error_msg ?></span>
+  </div>
+  <?php
+}
+?>

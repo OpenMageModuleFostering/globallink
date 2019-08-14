@@ -1,0 +1,16 @@
+{
+    "name": "OpenMageModuleFostering/GlobalLink",
+    "type": "magento-module",
+    "license": "Commercial-License",
+    "homepage": "",
+    "description": "Translation extension from Translations.com",
+    "authors": [
+    {
+        "name": "Translations.com",
+        "email": "magento@translations.com"
+    }
+],
+    "suggest": {
+        "magento-hackathon/magento-composer-installer": "*"
+    }
+}
